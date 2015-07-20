@@ -67,32 +67,34 @@ func (s *RelationshipsService) Follows(userID string) ([]User, *ResponsePaginati
 // passed then it refers to `self` or curret authenticated user.
 //
 // Instagram API docs: http://instagram.com/developer/endpoints/relationships/#get_users_followed_by
-func (s *RelationshipsService) FollowedBy(userID string) ([]User, *ResponsePagination, error) {
+func (s *RelationshipsService) FollowedBy(userID string) (aRetVal []User, err error) {
 	var u string
 	if userID != "" {
 		u = fmt.Sprintf("users/%v/followed-by", userID)
 	} else {
 		u = "users/self/followed-by"
 	}
-
-	req, err := s.client.NewRequest("GET", u, "")
-	if err != nil {
-		return nil, nil, err
+	
+	aRetVal = []User{}
+	for{
+		req, err := s.client.NewRequest("GET", u, "")
+		if err != nil {
+			return nil, err
+		}
+	
+		aUsers := []User{}
+		_, err = s.client.Do(req, &aUsers)
+		if err != nil {
+			return nil, err
+		}
+		aRetVal = append(aRetVal, aUsers...)
+		if s.client.Response.Pagination != nil && 0 < len(s.client.Response.Pagination.NextURL) {
+			u = s.client.Response.Pagination.NextURL
+			continue
+		}
+		break
 	}
-
-	users := new([]User)
-
-	_, err = s.client.Do(req, users)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	page := new(ResponsePagination)
-	if s.client.Response.Pagination != nil {
-		page = s.client.Response.Pagination
-	}
-
-	return *users, page, err
+	return aRetVal, err
 }
 
 // RequestedBy lists the users who have requested this user's permission to follow.

@@ -7,6 +7,7 @@ package instagram
 
 import (
 	"fmt"
+	//	"log"
 	"net/url"
 	"strconv"
 )
@@ -32,9 +33,11 @@ type User struct {
 
 // UserCount represents stats of a Instagram user.
 type UserCount struct {
-	Media      int `json:"media,omitempty"`
-	Follows    int `json:"follows,omitempty"`
-	FollowedBy int `json:"followed_by,omitempty"`
+	Media     int `json:"media,omitempty"`
+	Follows   int `json:"follows,omitempty"`
+	Followers int `json:"followed_by,omitempty"`
+	Likes     int
+	Comments  int
 }
 
 // Get basic information about a user. Passing the empty string will fetch the authenticated

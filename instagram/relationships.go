@@ -7,6 +7,7 @@ package instagram
 
 import (
 	"fmt"
+	str "strings"
 )
 
 // RelationshipsService handles communication with the user's relationships related
@@ -31,18 +32,14 @@ type Relationship struct {
 	TargetUserIsPrivate bool `json:"target_user_is_private,omitempty"`
 }
 
-// Follows gets the list of users this user follows. If empty string is
-// passed then it refers to `self` or curret authenticated user.
+// Follows gets the list of users curret authenticated user follows.
 //
 // Instagram API docs: http://instagram.com/developer/endpoints/relationships/#get_users_follows
-func (s *RelationshipsService) Follows(userID string) ([]User, *ResponsePagination, error) {
-	var u string
-	if userID != "" {
-		u = fmt.Sprintf("users/%v/follows", userID)
-	} else {
-		u = "users/self/follows"
+func (s *RelationshipsService) Follows(oPagination *ResponsePagination) ([]User, *ResponsePagination, error) {
+	u := "users/self/follows"
+	if nil != oPagination {
+		u = str.Replace(oPagination.NextURL, "https://api.instagram.com/v1/", "", -1)
 	}
-
 	req, err := s.client.NewRequest("GET", u, "")
 	if err != nil {
 		return nil, nil, err
@@ -63,38 +60,31 @@ func (s *RelationshipsService) Follows(userID string) ([]User, *ResponsePaginati
 	return *users, page, err
 }
 
-// FollowedBy gets the list of users this user is followed by. If empty string is
-// passed then it refers to `self` or curret authenticated user.
+// FollowedBy gets the list of users curret authenticated user is followed by.
 //
 // Instagram API docs: http://instagram.com/developer/endpoints/relationships/#get_users_followed_by
-func (s *RelationshipsService) FollowedBy(userID string) (aRetVal []User, err error) {
-	var u string
-	if userID != "" {
-		u = fmt.Sprintf("users/%v/followed-by", userID)
-	} else {
-		u = "users/self/followed-by"
+func (s *RelationshipsService) FollowedBy(oPagination *ResponsePagination) ([]User, *ResponsePagination, error) {
+	u := "users/self/followed-by"
+	if nil != oPagination {
+		u = str.Replace(oPagination.NextURL, "https://api.instagram.com/v1/", "", -1)
 	}
-	
-	aRetVal = []User{}
-	for{
-		req, err := s.client.NewRequest("GET", u, "")
-		if err != nil {
-			return nil, err
-		}
-	
-		aUsers := []User{}
-		_, err = s.client.Do(req, &aUsers)
-		if err != nil {
-			return nil, err
-		}
-		aRetVal = append(aRetVal, aUsers...)
-		if s.client.Response.Pagination != nil && 0 < len(s.client.Response.Pagination.NextURL) {
-			u = s.client.Response.Pagination.NextURL
-			continue
-		}
-		break
+	req, err := s.client.NewRequest("GET", u, "")
+	if err != nil {
+		return nil, nil, err
 	}
-	return aRetVal, err
+
+	users := new([]User)
+
+	_, err = s.client.Do(req, users)
+	if err != nil {
+		return nil, nil, err
+	}
+	page := new(ResponsePagination)
+	if s.client.Response.Pagination != nil {
+		page = s.client.Response.Pagination
+	}
+
+	return *users, page, err
 }
 
 // RequestedBy lists the users who have requested this user's permission to follow.

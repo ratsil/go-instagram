@@ -39,6 +39,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	//	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -257,10 +258,10 @@ func (c *Client) NewRequest(method, urlStr string, body string) (*http.Request, 
 		q.Set("client_id", c.ClientID)
 	}
 	if c.ClientSecret != "" && q.Get("client_secret") == "" {
-		q.Set("client_secret", c.ClientSecret)
+		//q.Set("client_secret", c.ClientSecret)
 	}
 	u.RawQuery = q.Encode()
-
+	//	log.Print(u.String())
 	req, err := http.NewRequest(method, u.String(), bytes.NewBufferString(body))
 	if err != nil {
 		return nil, err
@@ -286,7 +287,6 @@ func (c *Client) Do(req *http.Request, v interface{}) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer resp.Body.Close()
 
 	err = CheckResponse(resp)
@@ -344,7 +344,6 @@ func CheckResponse(r *http.Response) error {
 	if r.StatusCode == http.StatusOK {
 		return nil
 	}
-
 	data, readErr := ioutil.ReadAll(r.Body)
 	if readErr != nil {
 		return readErr
